@@ -8,6 +8,7 @@ export interface PaydownGoal {
 
 export interface PaydownScenario {
   label: string;
+  summary: string;
   extraAnnualLumpSum: number;
   extraPeriodicPayment: number;
   schedule: AmortizationSchedule;
@@ -57,7 +58,8 @@ function buildScenario(
   baseline: AmortizationSchedule,
   extraAnnualLumpSum: number,
   extraPeriodicPayment: number,
-  label: string
+  label: string,
+  summary: string
 ): PaydownScenario {
   let schedule: AmortizationSchedule;
   if (extraAnnualLumpSum > 0 && extraPeriodicPayment === 0) {
@@ -83,6 +85,7 @@ function buildScenario(
 
   return {
     label,
+    summary,
     extraAnnualLumpSum,
     extraPeriodicPayment,
     schedule,
@@ -172,11 +175,17 @@ function findLumpSumForInterestSavings(
   return Math.ceil(high);
 }
 
+function fmtAmt(n: number) {
+  return `$${Math.round(n).toLocaleString("en-CA")}`;
+}
+
 export function calculatePaydownSuggestion(
   mortgage: MortgageResult,
   goal: PaydownGoal
 ): PaydownSuggestion {
   const baseline = generateAmortizationSchedule(mortgage, []);
+  const pLabel = mortgage.periodsPerYear === 12 ? "mo" : "2wk";
+  const pWord = mortgage.periodsPerYear === 12 ? "month" : "2 weeks";
 
   let lumpSumOnlyAmount: number | null = null;
   let paymentIncreaseOnly: number | null = null;
@@ -189,7 +198,7 @@ export function calculatePaydownSuggestion(
         targetDescription: "Target already met — no extra payments needed.",
         lumpSumOnlyAmount: 0,
         paymentIncreaseOnly: 0,
-        scenarios: buildComparisonScenarios(mortgage, [0, 5000, 10000, 15000]),
+        scenarios: buildComparisonScenarios(mortgage, [0, 2500, 5000, 10000, 15000]),
       };
     }
     lumpSumOnlyAmount = findRequiredAnnualLumpSum(mortgage, targetPeriods);
@@ -201,7 +210,6 @@ export function calculatePaydownSuggestion(
       paymentIncreaseOnly = mortgage.paymentAmount * 2;
     } else {
       lumpSumOnlyAmount = findLumpSumForInterestSavings(mortgage, baseline, goal.value);
-      // For interest savings, payment increase uses same binary search approach
       let low = 0;
       let high = mortgage.paymentAmount * 2;
       for (let i = 0; i < 40; i++) {
@@ -220,17 +228,38 @@ export function calculatePaydownSuggestion(
     targetDescription = `Save $${goal.value.toLocaleString("en-CA")} in interest`;
   }
 
-  const halfLump = lumpSumOnlyAmount ? lumpSumOnlyAmount / 2 : 0;
-  const halfPayment = paymentIncreaseOnly ? paymentIncreaseOnly / 2 : 0;
+  const L = lumpSumOnlyAmount ?? 0;
+  const P = paymentIncreaseOnly ?? 0;
 
-  const scenarios: PaydownScenario[] = [
-    buildScenario(mortgage, baseline, lumpSumOnlyAmount ?? 0, 0,
-      `$${(lumpSumOnlyAmount ?? 0).toLocaleString("en-CA")}/yr lump sum only`),
-    buildScenario(mortgage, baseline, 0, paymentIncreaseOnly ?? 0,
-      `+$${(paymentIncreaseOnly ?? 0).toLocaleString("en-CA")}/${mortgage.periodsPerYear === 12 ? "mo" : "2wk"} payment only`),
-    buildScenario(mortgage, baseline, halfLump, halfPayment,
-      `Combined: $${Math.round(halfLump).toLocaleString("en-CA")}/yr + +$${Math.round(halfPayment).toLocaleString("en-CA")}/${mortgage.periodsPerYear === 12 ? "mo" : "2wk"}`),
-  ];
+  // 5 scenarios spanning from all-lump to all-payment
+  const weights = [1, 0.75, 0.5, 0.25, 0] as const;
+  const scenarios: PaydownScenario[] = weights.map((w) => {
+    const lump = Math.round(L * w);
+    const payment = Math.round(P * (1 - w));
+
+    let label: string;
+    let summary: string;
+
+    if (w === 1) {
+      label = `${fmtAmt(lump)}/yr lump sum`;
+      summary = `Once a year — at renewal, after a bonus, or at tax time — put ${fmtAmt(lump)} straight onto your principal. No change to your regular payments.`;
+    } else if (w === 0) {
+      label = `+${fmtAmt(payment)}/${pLabel} on payments`;
+      summary = `Increase each regular payment by ${fmtAmt(payment)}. The extra goes directly to principal, and your lender applies it automatically every ${pWord}. No lump sum required.`;
+    } else if (w === 0.75) {
+      label = `${fmtAmt(lump)}/yr + +${fmtAmt(payment)}/${pLabel}`;
+      summary = `Put ${fmtAmt(lump)} toward your mortgage once a year and add a small ${fmtAmt(payment)} bump to each payment. Mostly lump-sum driven — good if your income is irregular.`;
+    } else if (w === 0.5) {
+      label = `${fmtAmt(lump)}/yr + +${fmtAmt(payment)}/${pLabel}`;
+      summary = `Split the effort evenly: ${fmtAmt(lump)} as an annual lump sum and ${fmtAmt(payment)} extra per ${pWord}. Neither commitment feels too large on its own.`;
+    } else {
+      // w === 0.25 — the recommended option
+      label = `${fmtAmt(lump)}/yr + +${fmtAmt(payment)}/${pLabel}`;
+      summary = `Boost your regular payment by ${fmtAmt(payment)} per ${pWord} and top it up with a modest ${fmtAmt(lump)} lump sum once a year. The smallest upfront commitment that still makes a meaningful dent.`;
+    }
+
+    return buildScenario(mortgage, baseline, lump, payment, label, summary);
+  });
 
   return {
     targetDescription,
@@ -245,15 +274,15 @@ export function buildComparisonScenarios(
   annualAmounts: number[]
 ): PaydownScenario[] {
   const baseline = generateAmortizationSchedule(mortgage, []);
-  return annualAmounts.map((amount) =>
-    buildScenario(
-      mortgage,
-      baseline,
-      amount,
-      0,
+  return annualAmounts.map((amount) => {
+    const monthly = Math.round(amount / 12);
+    const label =
+      amount === 0 ? "No prepayment" : `${fmtAmt(amount)}/yr lump sum`;
+    const summary =
       amount === 0
-        ? "No prepayment"
-        : `$${amount.toLocaleString("en-CA")}/yr lump sum`
-    )
-  );
+        ? "Standard scheduled payments only — no changes needed."
+        : `Set aside ${fmtAmt(monthly)}/month and make a single ${fmtAmt(amount)} lump-sum payment each year, typically at renewal or when cash flow allows.`;
+
+    return buildScenario(mortgage, baseline, amount, 0, label, summary);
+  });
 }

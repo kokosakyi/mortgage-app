@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { calculateMortgage, type MortgageInput, type MortgageResult, type LumpSum } from "@/lib/mortgage-calculator";
 import { generateComparisonSchedules } from "@/lib/amortization-schedule";
 import { saveMortgage } from "@/lib/mortgage-storage";
+import { Calculator, TrendingDown, Target } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PaymentHero } from "@/components/payment-hero";
@@ -71,9 +72,15 @@ export function CalculatorForm() {
 
       <Tabs defaultValue="calculator">
         <TabsList className="mb-6 w-full sm:w-auto">
-          <TabsTrigger value="calculator">Calculator</TabsTrigger>
-          <TabsTrigger value="schedule">Amortization</TabsTrigger>
-          <TabsTrigger value="planner">Paydown Planner</TabsTrigger>
+          <TabsTrigger value="calculator" className="gap-1.5">
+            <Calculator className="w-3.5 h-3.5" />Calculator
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="gap-1.5">
+            <TrendingDown className="w-3.5 h-3.5" />Amortization
+          </TabsTrigger>
+          <TabsTrigger value="planner" className="gap-1.5">
+            <Target className="w-3.5 h-3.5" />Paydown Planner
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="calculator">

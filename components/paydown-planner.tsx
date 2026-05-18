@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Target, Zap, BarChart3, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -16,19 +17,38 @@ import {
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
 
-function ScenarioCard({ scenario, isTarget }: { scenario: PaydownScenario; isTarget?: boolean }) {
+function ScenarioCard({
+  scenario,
+  isTarget,
+}: {
+  scenario: PaydownScenario;
+  isTarget?: boolean;
+}) {
   return (
-    <div className={cn(
-      "rounded-2xl p-5 border transition-all",
-      isTarget
-        ? "border-primary bg-primary/5 shadow-card"
-        : "border-border bg-card shadow-card"
-    )}>
-      <div className="flex items-start justify-between gap-2 mb-3">
+    <div
+      className={cn(
+        "rounded-2xl p-5 border transition-all flex flex-col gap-3",
+        isTarget
+          ? "border-primary bg-primary/5 shadow-card"
+          : "border-border bg-card shadow-card"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold leading-snug">{scenario.label}</p>
-        {isTarget && <Badge variant="default" className="shrink-0 text-xs">Recommended</Badge>}
+        {isTarget && (
+          <Badge variant="default" className="shrink-0 text-xs gap-1">
+            <Star className="w-2.5 h-2.5" />
+            Recommended
+          </Badge>
+        )}
       </div>
-      <div className="grid grid-cols-2 gap-3">
+
+      {/* Human-friendly summary */}
+      <p className="text-[11.5px] leading-relaxed text-muted-foreground italic border-l-2 border-primary/30 pl-2">
+        {scenario.summary}
+      </p>
+
+      <div className="grid grid-cols-2 gap-3 pt-1">
         <div>
           <p className="text-xs text-muted-foreground">Interest saved</p>
           <p className="font-semibold text-primary result-number">{fmt(scenario.interestSaved)}</p>
@@ -44,7 +64,9 @@ function ScenarioCard({ scenario, isTarget }: { scenario: PaydownScenario; isTar
         <div>
           <p className="text-xs text-muted-foreground">New payoff</p>
           <p className="font-medium text-sm result-number">
-            {new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "short" }).format(scenario.newPayoffDate)}
+            {new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "short" }).format(
+              scenario.newPayoffDate
+            )}
           </p>
         </div>
       </div>
@@ -57,13 +79,15 @@ interface PaydownPlannerProps {
 }
 
 export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
-  const [goalType, setGoalType] = useState<"target-years" | "target-interest-savings">("target-years");
+  const [goalType, setGoalType] = useState<"target-years" | "target-interest-savings">(
+    "target-years"
+  );
   const [targetYears, setTargetYears] = useState(Math.max(5, mortgage.amortizationYears - 5));
   const [targetSavings, setTargetSavings] = useState(25000);
   const [suggestion, setSuggestion] = useState<PaydownSuggestion | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const comparisonScenarios = buildComparisonScenarios(mortgage, [0, 5000, 10000, 15000]);
+  const comparisonScenarios = buildComparisonScenarios(mortgage, [0, 2500, 5000, 10000, 15000]);
 
   function handleCalculate() {
     setIsCalculating(true);
@@ -77,21 +101,24 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
     }, 0);
   }
 
-  const periodLabel = mortgage.periodsPerYear === 12 ? "mo" : "2wk";
-
   return (
     <div className="space-y-8">
       {/* Goal input */}
       <div className="rounded-2xl bg-card shadow-card p-6">
-        <h3 className="font-semibold mb-4">Set your paydown goal</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <Target className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold">Set your paydown goal</h3>
+        </div>
 
-        {/* Goal type toggle */}
         <div className="flex gap-2 mb-6">
           {(["target-years", "target-interest-savings"] as const).map((type) => (
             <button
               key={type}
               type="button"
-              onClick={() => { setGoalType(type); setSuggestion(null); }}
+              onClick={() => {
+                setGoalType(type);
+                setSuggestion(null);
+              }}
               className={cn(
                 "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all border",
                 goalType === type
@@ -115,7 +142,10 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
               max={mortgage.amortizationYears - 1}
               step={1}
               value={[targetYears]}
-              onValueChange={([v]) => { setTargetYears(v); setSuggestion(null); }}
+              onValueChange={([v]) => {
+                setTargetYears(v);
+                setSuggestion(null);
+              }}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>1 year</span>
@@ -130,64 +160,75 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
             </div>
             <Slider
               min={1000}
-              max={Math.round(mortgage.totalInterest * 0.9 / 1000) * 1000}
+              max={Math.round((mortgage.totalInterest * 0.9) / 1000) * 1000}
               step={1000}
               value={[targetSavings]}
-              onValueChange={([v]) => { setTargetSavings(v); setSuggestion(null); }}
+              onValueChange={([v]) => {
+                setTargetSavings(v);
+                setSuggestion(null);
+              }}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>$1,000</span>
-              <span>{fmt(Math.round(mortgage.totalInterest * 0.9 / 1000) * 1000)}</span>
+              <span>{fmt(Math.round((mortgage.totalInterest * 0.9) / 1000) * 1000)}</span>
             </div>
           </div>
         )}
 
-        <Button
-          onClick={handleCalculate}
-          disabled={isCalculating}
-          className="w-full mt-5"
-        >
+        <Button onClick={handleCalculate} disabled={isCalculating} className="w-full mt-5">
+          <Zap className="w-4 h-4 mr-2" />
           {isCalculating ? "Calculating…" : "Calculate suggestions"}
         </Button>
       </div>
 
-      {/* Suggestion results */}
+      {/* Suggestion results — 5 scenarios */}
       {suggestion && (
         <div className="space-y-4">
           <div>
-            <h3 className="font-semibold">To {suggestion.targetDescription.toLowerCase()}</h3>
-            <p className="text-sm text-muted-foreground">Three ways to reach your goal:</p>
+            <h3 className="font-semibold">
+              To {suggestion.targetDescription.toLowerCase()}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Five ways to reach your goal — pick the one that fits your cash flow:
+            </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {suggestion.scenarios.map((scenario, i) => (
-              <ScenarioCard key={i} scenario={scenario} isTarget={i === 0} />
+              // Index 3 = 25% lump + 75% payment: lowest upfront, still meaningful dent
+              <ScenarioCard key={i} scenario={scenario} isTarget={i === 3} />
             ))}
           </div>
-          {suggestion.lumpSumOnlyAmount !== null && suggestion.lumpSumOnlyAmount > 0 && (
-            <p className="text-sm text-muted-foreground bg-muted/60 rounded-xl px-4 py-3">
-              Lump sum only: <strong>{fmt(suggestion.lumpSumOnlyAmount)}/year</strong> ·{" "}
-              Payment increase only: <strong>+{fmt(suggestion.paymentIncreaseOnly ?? 0)}/{periodLabel}</strong>
-            </p>
-          )}
         </div>
       )}
 
       {/* Always-on comparison table */}
       <div className="rounded-2xl bg-card shadow-card p-6">
-        <h3 className="font-semibold mb-1">Prepayment comparison</h3>
-        <p className="text-sm text-muted-foreground mb-4">Annual lump sum scenarios</p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex items-center gap-2 mb-1">
+          <BarChart3 className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold">Prepayment comparison</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Annual lump sum scenarios — no goal needed
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {comparisonScenarios.map((scenario) => (
-            <div key={scenario.label} className="rounded-xl border border-border p-4">
-              <p className="text-sm font-medium mb-2">{scenario.label}</p>
-              <p className="text-xs text-muted-foreground">Interest saved</p>
-              <p className="font-semibold text-primary result-number">{fmt(scenario.interestSaved)}</p>
-              <p className="text-xs text-muted-foreground mt-2">Time saved</p>
-              <p className="font-medium result-number text-sm">
-                {scenario.timeSavedYears > 0 || scenario.timeSavedMonths > 0
-                  ? `${scenario.timeSavedYears > 0 ? `${scenario.timeSavedYears}y ` : ""}${scenario.timeSavedMonths > 0 ? `${scenario.timeSavedMonths}m` : ""}`
-                  : "—"}
+            <div key={scenario.label} className="rounded-xl border border-border p-4 flex flex-col gap-2">
+              <p className="text-sm font-medium">{scenario.label}</p>
+              <p className="text-[11px] leading-relaxed text-muted-foreground italic">
+                {scenario.summary}
               </p>
+              <div className="pt-1">
+                <p className="text-xs text-muted-foreground">Interest saved</p>
+                <p className="font-semibold text-primary result-number">{fmt(scenario.interestSaved)}</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Time saved</p>
+                <p className="font-medium result-number text-sm">
+                  {scenario.timeSavedYears > 0 || scenario.timeSavedMonths > 0
+                    ? `${scenario.timeSavedYears > 0 ? `${scenario.timeSavedYears}y ` : ""}${
+                        scenario.timeSavedMonths > 0 ? `${scenario.timeSavedMonths}m` : ""
+                      }`
+                    : "—"}
+                </p>
+              </div>
             </div>
           ))}
         </div>

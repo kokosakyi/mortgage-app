@@ -1,5 +1,6 @@
 "use client";
 
+import { Building2, TrendingDown, Wallet, CreditCard } from "lucide-react";
 import type { MortgageResult } from "@/lib/mortgage-calculator";
 
 const fmt = (n: number) =>
@@ -21,7 +22,10 @@ export function PaymentHero({ result }: PaymentHeroProps) {
 
   return (
     <div className="rounded-2xl bg-card shadow-card p-8 mb-8 animate-fade-in-up">
-      <p className="text-sm font-medium text-muted-foreground mb-1">Your payment</p>
+      <div className="flex items-center gap-1.5 mb-1">
+        <CreditCard className="w-4 h-4 text-muted-foreground" />
+        <p className="text-sm font-medium text-muted-foreground">Your payment</p>
+      </div>
       <div className="flex items-end gap-3 mb-1">
         <span className="text-5xl md:text-6xl font-bold text-primary result-number">
           {fmt(result.paymentAmount)}
@@ -46,15 +50,24 @@ export function PaymentHero({ result }: PaymentHeroProps) {
       {/* Stat chips */}
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <p className="text-xs text-muted-foreground mb-0.5">Principal</p>
+          <div className="flex items-center gap-1 mb-0.5">
+            <Building2 className="w-3 h-3 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Principal</p>
+          </div>
           <p className="font-semibold result-number">{fmt(result.principalAmount)}</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-0.5">Total interest</p>
+          <div className="flex items-center gap-1 mb-0.5">
+            <TrendingDown className="w-3 h-3 text-chart-4" />
+            <p className="text-xs text-muted-foreground">Total interest</p>
+          </div>
           <p className="font-semibold result-number text-chart-4">{fmt(result.totalInterest)}</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-0.5">Total cost</p>
+          <div className="flex items-center gap-1 mb-0.5">
+            <Wallet className="w-3 h-3 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Total cost</p>
+          </div>
           <p className="font-semibold result-number">{fmt(result.totalAmountPaid)}</p>
         </div>
       </div>

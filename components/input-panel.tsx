@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Info, X, CalendarDays } from "lucide-react";
+import { Info, X, CalendarDays, Home, Percent, Clock, Repeat } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -141,7 +141,12 @@ export function InputPanel({ inputs, onChange, startDate, onStartDateChange }: I
     <div className="space-y-7">
       {/* Home price */}
       <FieldWithInfo
-        label={<Label htmlFor="homePrice" className="text-sm font-medium">Home price</Label>}
+        label={
+          <div className="flex items-center gap-1.5">
+            <Home className="w-3.5 h-3.5 text-muted-foreground" />
+            <Label htmlFor="homePrice" className="text-sm font-medium">Home price</Label>
+          </div>
+        }
         tip={TIPS.homePrice}
       >
         <div className="relative">
@@ -227,7 +232,12 @@ export function InputPanel({ inputs, onChange, startDate, onStartDateChange }: I
 
       {/* Interest rate */}
       <FieldWithInfo
-        label={<Label className="text-sm font-medium">Interest rate</Label>}
+        label={
+          <div className="flex items-center gap-1.5">
+            <Percent className="w-3.5 h-3.5 text-muted-foreground" />
+            <Label className="text-sm font-medium">Interest rate</Label>
+          </div>
+        }
         tip={TIPS.interestRate}
       >
         <div className="flex items-center gap-3">
@@ -256,7 +266,12 @@ export function InputPanel({ inputs, onChange, startDate, onStartDateChange }: I
 
       {/* Amortization */}
       <FieldWithInfo
-        label={<Label className="text-sm font-medium">Amortization period</Label>}
+        label={
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <Label className="text-sm font-medium">Amortization period</Label>
+          </div>
+        }
         tip={TIPS.amortization}
       >
         <div className="flex items-center gap-3">
@@ -277,7 +292,12 @@ export function InputPanel({ inputs, onChange, startDate, onStartDateChange }: I
 
       {/* Payment frequency */}
       <FieldWithInfo
-        label={<Label className="text-sm font-medium">Payment frequency</Label>}
+        label={
+          <div className="flex items-center gap-1.5">
+            <Repeat className="w-3.5 h-3.5 text-muted-foreground" />
+            <Label className="text-sm font-medium">Payment frequency</Label>
+          </div>
+        }
         tip={TIPS.frequency}
       >
         <Select
