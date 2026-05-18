@@ -38,7 +38,7 @@ export function CalculatorForm() {
   const [result, setResult] = useState<MortgageResult | null>(null);
   const [lumpSums, setLumpSums] = useState<LumpSum[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [startDate] = useState<Date>(firstOfNextMonth);
+  const [startDate, setStartDate] = useState<Date>(firstOfNextMonth);
 
   useEffect(() => {
     try {
@@ -83,7 +83,12 @@ export function CalculatorForm() {
                 <CardTitle className="text-lg">Mortgage details</CardTitle>
               </CardHeader>
               <CardContent>
-                <InputPanel inputs={inputs} onChange={handleInputChange} />
+                <InputPanel
+                  inputs={inputs}
+                  onChange={handleInputChange}
+                  startDate={startDate}
+                  onStartDateChange={setStartDate}
+                />
               </CardContent>
             </Card>
             <Card>
@@ -92,7 +97,7 @@ export function CalculatorForm() {
               </CardHeader>
               <CardContent>
                 {result ? (
-                  <ResultsPanel result={result} onSave={handleSave} isSaving={isSaving} />
+                  <ResultsPanel result={result} onSave={handleSave} isSaving={isSaving} startDate={startDate} />
                 ) : (
                   <p className="text-muted-foreground text-sm">Enter valid mortgage details to see results.</p>
                 )}

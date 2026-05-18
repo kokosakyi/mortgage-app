@@ -6,10 +6,14 @@ import type { MortgageResult } from "@/lib/mortgage-calculator";
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
 
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
+
 interface ResultsPanelProps {
   result: MortgageResult;
   onSave: () => void;
   isSaving?: boolean;
+  startDate: Date;
 }
 
 interface StatRowProps {
@@ -26,7 +30,7 @@ function StatRow({ label, value }: StatRowProps) {
   );
 }
 
-export function ResultsPanel({ result, onSave, isSaving = false }: ResultsPanelProps) {
+export function ResultsPanel({ result, onSave, isSaving = false, startDate }: ResultsPanelProps) {
   return (
     <div className="space-y-1">
       {result.cmhcInsurance > 0 && (
@@ -51,6 +55,7 @@ export function ResultsPanel({ result, onSave, isSaving = false }: ResultsPanelP
       <StatRow label="Interest rate" value={`${result.interestRate}%`} />
       <StatRow label="Amortization" value={`${result.amortizationYears} years`} />
       <StatRow label="Total payments" value={result.totalPayments.toLocaleString()} />
+      <StatRow label="First payment" value={fmtDate(startDate)} />
 
       <div className="pt-4">
         <Button

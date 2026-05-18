@@ -20,7 +20,7 @@ export function PaymentHero({ result }: PaymentHeroProps) {
   const interestPct = 100 - principalPct;
 
   return (
-    <div className="rounded-2xl bg-card shadow-card p-8 mb-8">
+    <div className="rounded-2xl bg-card shadow-card p-8 mb-8 animate-fade-in-up">
       <p className="text-sm font-medium text-muted-foreground mb-1">Your payment</p>
       <div className="flex items-end gap-3 mb-1">
         <span className="text-5xl md:text-6xl font-bold text-primary result-number">

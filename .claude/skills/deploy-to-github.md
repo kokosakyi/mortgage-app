@@ -1,54 +1,85 @@
-# Skill: Deploy to GitHub (and Vercel)
+# Skill: Deploy to GitHub
 
-## One-time GitHub setup (no `gh` CLI)
+**Repository:** `https://github.com/kokosakyi/mortgage-app.git`
+**Branch:** `main`
 
-### 1. Create the repo on GitHub
-Go to https://github.com/new and fill in:
-- **Repository name:** `mortgage-app` (or your preferred name)
-- **Visibility:** Public or Private
-- **Do NOT initialise** with README, .gitignore, or licence — the repo already has these
+## Automated deploy workflow (primary use)
 
-Click **Create repository** and copy the HTTPS URL shown (e.g. `https://github.com/<username>/mortgage-app.git`).
+When this skill is invoked, execute the following steps in order:
 
-### 2. Add the remote and push
+### 1. Inspect current state
 ```powershell
-git remote add origin https://github.com/<username>/mortgage-app.git
+git status
+git diff
+git diff --cached
+```
+
+If there is nothing to commit (clean working tree), report that and stop.
+
+### 2. Stage all changes
+```powershell
+git add -A
+```
+
+### 3. Generate a commit message
+Read the staged diff and write a concise commit message that:
+- Summarises the *why* (not just the *what*)
+- Uses imperative present tense ("Add", "Fix", "Update", not "Added")
+- Is one sentence for small changes; adds bullet points for larger ones
+
+### 4. Commit using PowerShell here-string syntax
+```powershell
+git commit -m @'
+<generated title>
+
+<optional bullet points>
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+'@
+```
+
+### 5. Push to GitHub
+```powershell
+git push origin main
+```
+
+### 6. Confirm
+Report the commit hash and the GitHub URL so the user can verify.
+
+---
+
+## Authentication
+
+The remote is pre-configured. If a push is rejected due to auth:
+- GitHub no longer accepts plain passwords for HTTPS.
+- Use a **Personal Access Token (PAT)** as the password when prompted.
+- **Create a PAT:** GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token → tick `repo` scope → copy the token.
+- To avoid re-entering it: `git config --global credential.helper wincred` (stores in Windows Credential Manager after first use).
+
+---
+
+## One-time setup reference (already done for this project)
+
+```powershell
+git remote add origin https://github.com/kokosakyi/mortgage-app.git
 git branch -M main
 git push -u origin main
 ```
 
-If prompted for credentials, use your GitHub username and a **Personal Access Token** (PAT) as the password — GitHub no longer accepts plain passwords for HTTPS pushes.
-
-**Create a PAT:** GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token → tick `repo` scope → copy the token.
-
-## Subsequent pushes (normal workflow)
-
-```powershell
-git add <files>
-git commit -m "your message"
-git push
-```
+---
 
 ## Deploy to Vercel
 
 1. Go to https://vercel.com/new
-2. Import the GitHub repository
+2. Import `kokosakyi/mortgage-app` from GitHub
 3. Vercel auto-detects Next.js — no build configuration needed
 4. Click **Deploy**
 
-No environment variables are required for the localStorage-only flow. If you connect a database later, add `DATABASE_URL` in Vercel → Project → Settings → Environment Variables.
+Vercel auto-deploys on every push to `main` once the project is connected.
 
-## Install GitHub CLI (optional, for future convenience)
+No environment variables are required for the localStorage-only flow. To connect a database later, add `DATABASE_URL` in Vercel → Project → Settings → Environment Variables.
 
-```powershell
-winget install --id GitHub.cli
-gh auth login   # follow prompts, choose HTTPS + browser auth
-```
-
-Once installed, repo creation becomes:
-```powershell
-gh repo create mortgage-app --public --source=. --remote=origin --push
-```
+---
 
 ## What is and isn't committed
 
@@ -57,8 +88,8 @@ gh repo create mortgage-app --public --source=. --remote=origin --push
 - `CLAUDE.md` and `.claude/skills/` — project documentation for future Claude sessions
 - `pnpm-lock.yaml` — lockfile for reproducible installs
 
-**Gitignored (not committed):**
-- `.claude/settings.local.json` — personal permission grants (PowerShell allow-all)
+**Gitignored (never committed):**
+- `.claude/settings.local.json` — personal permission grants
 - `.claude/memory/` — personal Claude memory store
 - `playwright-report/`, `test-results/` — generated test artifacts
 - `steps.txt` — personal scratch notes
