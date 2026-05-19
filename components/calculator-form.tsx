@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { calculateMortgage, type MortgageInput, type MortgageResult, type LumpSum } from "@/lib/mortgage-calculator";
 import { generateComparisonSchedules } from "@/lib/amortization-schedule";
-import { saveMortgage } from "@/lib/mortgage-storage";
+import { saveMortgage, loadDraft, saveDraft } from "@/lib/mortgage-storage";
 import { Calculator, TrendingDown, Target } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { LumpSumManager } from "@/components/lump-sum-manager";
 import { AmortizationChart } from "@/components/amortization-chart";
 import { AmortizationTable } from "@/components/amortization-table";
 import { PaydownPlanner } from "@/components/paydown-planner";
+import { BottomNav, type CalcTab } from "@/components/bottom-nav";
 
 const DEFAULT_INPUTS: MortgageInput = {
   homePrice: 500000,
@@ -35,11 +36,21 @@ function firstOfNextMonth(): Date {
 
 export function CalculatorForm() {
   const router = useRouter();
-  const [inputs, setInputs] = useState<MortgageInput>(DEFAULT_INPUTS);
+  const [{ inputs: _i, lumpSums: _ls, startDate: _sd }] = useState(() => {
+    const draft = loadDraft();
+    return {
+      inputs: draft?.inputs ?? DEFAULT_INPUTS,
+      lumpSums: draft?.lumpSums ?? [],
+      startDate: draft?.startDate ?? firstOfNextMonth(),
+    };
+  });
+
+  const [inputs, setInputs] = useState<MortgageInput>(_i);
   const [result, setResult] = useState<MortgageResult | null>(null);
-  const [lumpSums, setLumpSums] = useState<LumpSum[]>([]);
+  const [lumpSums, setLumpSums] = useState<LumpSum[]>(_ls);
   const [isSaving, setIsSaving] = useState(false);
-  const [startDate, setStartDate] = useState<Date>(firstOfNextMonth);
+  const [startDate, setStartDate] = useState<Date>(_sd);
+  const [tab, setTab] = useState<CalcTab>("calculator");
 
   useEffect(() => {
     try {
@@ -48,6 +59,10 @@ export function CalculatorForm() {
       setResult(null);
     }
   }, [inputs]);
+
+  useEffect(() => {
+    saveDraft(inputs, lumpSums, startDate);
+  }, [inputs, lumpSums, startDate]);
 
   const scheduleData = useMemo(() => {
     if (!result) return null;
@@ -70,21 +85,31 @@ export function CalculatorForm() {
     <div>
       {result && <PaymentHero result={result} />}
 
-      <Tabs defaultValue="calculator">
-        <TabsList className="mb-6 w-full sm:w-auto">
-          <TabsTrigger value="calculator" className="gap-1.5">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as CalcTab)}>
+        {/* Desktop tabs — hidden on mobile (replaced by BottomNav) */}
+        <TabsList className="hidden md:inline-flex mb-6 h-11 p-1 rounded-full bg-muted/60 border border-border/60">
+          <TabsTrigger
+            value="calculator"
+            className="gap-1.5 rounded-full px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm"
+          >
             <Calculator className="w-3.5 h-3.5" />Calculator
           </TabsTrigger>
-          <TabsTrigger value="schedule" className="gap-1.5">
+          <TabsTrigger
+            value="schedule"
+            className="gap-1.5 rounded-full px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm"
+          >
             <TrendingDown className="w-3.5 h-3.5" />Amortization
           </TabsTrigger>
-          <TabsTrigger value="planner" className="gap-1.5">
+          <TabsTrigger
+            value="planner"
+            className="gap-1.5 rounded-full px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm"
+          >
             <Target className="w-3.5 h-3.5" />Paydown Planner
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="calculator">
-          <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
+        <TabsContent value="calculator" className="mt-0">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Mortgage details</CardTitle>
@@ -113,7 +138,7 @@ export function CalculatorForm() {
           </div>
         </TabsContent>
 
-        <TabsContent value="schedule">
+        <TabsContent value="schedule" className="mt-0 space-y-6">
           {result && scheduleData ? (
             <>
               <LumpSumManager
@@ -136,7 +161,7 @@ export function CalculatorForm() {
           )}
         </TabsContent>
 
-        <TabsContent value="planner">
+        <TabsContent value="planner" className="mt-0">
           {result ? (
             <PaydownPlanner mortgage={result} />
           ) : (
@@ -144,6 +169,8 @@ export function CalculatorForm() {
           )}
         </TabsContent>
       </Tabs>
+
+      <BottomNav value={tab} onChange={setTab} />
     </div>
   );
 }

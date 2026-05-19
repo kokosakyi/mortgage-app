@@ -49,3 +49,58 @@ export function deleteSavedMortgage(): void {
 export function hasSavedMortgage(): boolean {
   return getSavedMortgage() !== null;
 }
+
+// ── Draft (auto-save working state) ──────────────────────────────────────────
+
+const DRAFT_KEY = "mortgage_app_draft";
+
+interface MortgageDraft {
+  version: 1;
+  inputs: MortgageInput;
+  lumpSums: LumpSum[];
+  startDate: string;
+}
+
+export function saveDraft(
+  inputs: MortgageInput,
+  lumpSums: LumpSum[],
+  startDate: Date
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const draft: MortgageDraft = {
+      version: 1,
+      inputs,
+      lumpSums,
+      startDate: startDate.toISOString(),
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // localStorage quota exceeded — swallow silently
+  }
+}
+
+export function loadDraft(): {
+  inputs: MortgageInput;
+  lumpSums: LumpSum[];
+  startDate: Date;
+} | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(DRAFT_KEY);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as MortgageDraft;
+    if (parsed.version !== 1) { clearDraft(); return null; }
+    if (!parsed.inputs || !Array.isArray(parsed.lumpSums) || !parsed.startDate) return null;
+    const date = new Date(parsed.startDate);
+    if (isNaN(date.getTime())) return null;
+    return { inputs: parsed.inputs, lumpSums: parsed.lumpSums, startDate: date };
+  } catch {
+    return null;
+  }
+}
+
+export function clearDraft(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(DRAFT_KEY);
+}

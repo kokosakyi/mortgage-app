@@ -122,18 +122,19 @@ export function AmortizationChart({ baseline, accelerated, frequency }: Amortiza
 
   const tooltipStyle = {
     backgroundColor: "hsl(var(--card))",
-    border: "none",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "0.75rem",
-    boxShadow: "0 4px 20px 0 rgb(0 0 0 / 0.09)",
+    boxShadow: "0 8px 32px 0 hsl(var(--shadow-color) / 0.12)",
     fontSize: 13,
+    color: "hsl(var(--foreground))",
   };
 
   return (
-    <div className="rounded-2xl bg-card shadow-card p-6 mb-6">
+    <div className="rounded-2xl bg-card shadow-card p-4 sm:p-6">
       {/* Header row */}
-      <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
-        <div>
-          <h3 className="font-semibold">
+      <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-base sm:text-lg">
             {view === "balance" ? "Balance over time" : "Annual payment breakdown"}
           </h3>
           {accelerated && view === "balance" && (
@@ -154,17 +155,17 @@ export function AmortizationChart({ baseline, accelerated, frequency }: Amortiza
         </div>
 
         {/* View toggle */}
-        <div className="flex rounded-lg overflow-hidden border border-input text-xs shrink-0">
+        <div className="flex rounded-full overflow-hidden bg-muted/60 border border-border/60 p-1 text-xs shrink-0">
           {(["balance", "payments"] as ChartView[]).map((v) => (
             <button
               key={v}
               type="button"
               onClick={() => setView(v)}
               className={cn(
-                "px-3 py-1.5 transition-colors capitalize",
+                "px-3 py-1 rounded-full transition-all font-medium",
                 view === v
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {v === "balance" ? "Balance" : "Payments"}
@@ -173,7 +174,7 @@ export function AmortizationChart({ baseline, accelerated, frequency }: Amortiza
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis

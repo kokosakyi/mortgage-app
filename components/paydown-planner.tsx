@@ -102,15 +102,17 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Goal input */}
-      <div className="rounded-2xl bg-card shadow-card p-6">
+      <div className="rounded-2xl bg-card shadow-card p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Target className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold">Set your paydown goal</h3>
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <Target className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="font-semibold text-base sm:text-lg">Set your paydown goal</h3>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-1.5 mb-6 p-1 rounded-2xl bg-muted/60 border border-border/60">
           {(["target-years", "target-interest-savings"] as const).map((type) => (
             <button
               key={type}
@@ -120,10 +122,10 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
                 setSuggestion(null);
               }}
               className={cn(
-                "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all border",
+                "flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-all",
                 goalType === type
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border hover:bg-muted"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {type === "target-years" ? "Pay off by year" : "Save on interest"}
@@ -192,7 +194,7 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
               Five ways to reach your goal — pick the one that fits your cash flow:
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {suggestion.scenarios.map((scenario, i) => (
               // Index 3 = 25% lump + 75% payment: lowest upfront, still meaningful dent
               <ScenarioCard key={i} scenario={scenario} isTarget={i === 3} />
@@ -202,17 +204,19 @@ export function PaydownPlanner({ mortgage }: PaydownPlannerProps) {
       )}
 
       {/* Always-on comparison table */}
-      <div className="rounded-2xl bg-card shadow-card p-6">
+      <div className="rounded-2xl bg-card shadow-card p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-1">
-          <BarChart3 className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold">Prepayment comparison</h3>
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <BarChart3 className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="font-semibold text-base sm:text-lg">Prepayment comparison</h3>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
           Annual lump sum scenarios — no goal needed
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {comparisonScenarios.map((scenario) => (
-            <div key={scenario.label} className="rounded-xl border border-border p-4 flex flex-col gap-2">
+            <div key={scenario.label} className="rounded-xl border border-border bg-background/40 p-4 flex flex-col gap-2 transition-all hover:border-foreground/15 hover:bg-background">
               <p className="text-sm font-medium">{scenario.label}</p>
               <p className="text-[11px] leading-relaxed text-muted-foreground italic">
                 {scenario.summary}

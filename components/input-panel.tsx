@@ -138,7 +138,7 @@ export function InputPanel({ inputs, onChange, startDate, onStartDateChange }: I
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-6">
       {/* Home price */}
       <FieldWithInfo
         label={
@@ -166,17 +166,17 @@ export function InputPanel({ inputs, onChange, startDate, onStartDateChange }: I
         label={<Label className="text-sm font-medium">Down payment</Label>}
         tip={TIPS.downPayment}
         labelRight={
-          <div className="flex rounded-lg overflow-hidden border border-input text-xs">
+          <div className="flex p-0.5 rounded-full bg-muted/60 border border-border/60 text-xs">
             {(["percent", "amount"] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => handleDownModeSwitch(mode)}
                 className={cn(
-                  "px-3 py-1 transition-colors",
+                  "px-3 py-1 rounded-full font-medium transition-all min-w-[28px]",
                   downMode === mode
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background text-muted-foreground hover:bg-muted"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {mode === "percent" ? "%" : "$"}

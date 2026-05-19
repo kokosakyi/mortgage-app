@@ -52,17 +52,18 @@ export function LumpSumManager({ mortgage, lumpSums, onLumpSumsChange }: LumpSum
   const frequencyLabel = mortgage.periodsPerYear === 12 ? "month" : "biweekly period";
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="font-semibold">Lump sum prepayments</h3>
-          <p className="text-sm text-muted-foreground">Add extra principal payments to see how they shorten your mortgage.</p>
+    <div className="rounded-2xl bg-card shadow-card p-4 sm:p-6">
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-base sm:text-lg">Lump sum prepayments</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">Add extra principal payments to see how they shorten your mortgage.</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
               <Plus className="h-4 w-4" />
-              Add lump sum
+              <span className="hidden sm:inline">Add lump sum</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-sm">
@@ -113,29 +114,35 @@ export function LumpSumManager({ mortgage, lumpSums, onLumpSumsChange }: LumpSum
         </Dialog>
       </div>
 
-      {lumpSums.length > 0 && (
+      {lumpSums.length > 0 ? (
         <div className="space-y-2">
           {lumpSums.map((ls, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-xl bg-accent/40 px-4 py-3"
+              className="flex items-center justify-between rounded-xl bg-accent/60 border border-border/50 px-4 py-3"
             >
-              <div>
-                <span className="font-medium">{fmt(ls.amount)}</span>
-                <span className="text-sm text-muted-foreground ml-2">
-                  at {frequencyLabel} {ls.paymentNumber}
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold result-number">{fmt(ls.amount)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  At {frequencyLabel} {ls.paymentNumber}
                   {ls.label ? ` · ${ls.label}` : ""}
-                </span>
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleDelete(i)}
-                className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                aria-label="Remove lump sum"
+                className="text-muted-foreground hover:text-destructive transition-colors p-2 -mr-2 rounded-lg hover:bg-destructive/10 shrink-0"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center">
+          <p className="text-sm text-muted-foreground">No prepayments yet.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Add one to see how it accelerates your paydown.</p>
         </div>
       )}
     </div>
