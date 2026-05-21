@@ -59,12 +59,14 @@ interface MortgageDraft {
   inputs: MortgageInput;
   lumpSums: LumpSum[];
   startDate: string;
+  extraPayment?: number;
 }
 
 export function saveDraft(
   inputs: MortgageInput,
   lumpSums: LumpSum[],
-  startDate: Date
+  startDate: Date,
+  extraPayment: number = 0
 ): void {
   if (typeof window === "undefined") return;
   try {
@@ -73,6 +75,7 @@ export function saveDraft(
       inputs,
       lumpSums,
       startDate: startDate.toISOString(),
+      extraPayment,
     };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   } catch {
@@ -84,6 +87,7 @@ export function loadDraft(): {
   inputs: MortgageInput;
   lumpSums: LumpSum[];
   startDate: Date;
+  extraPayment: number;
 } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -94,7 +98,10 @@ export function loadDraft(): {
     if (!parsed.inputs || !Array.isArray(parsed.lumpSums) || !parsed.startDate) return null;
     const date = new Date(parsed.startDate);
     if (isNaN(date.getTime())) return null;
-    return { inputs: parsed.inputs, lumpSums: parsed.lumpSums, startDate: date };
+    const extraPayment = typeof parsed.extraPayment === "number" && parsed.extraPayment >= 0
+      ? parsed.extraPayment
+      : 0;
+    return { inputs: parsed.inputs, lumpSums: parsed.lumpSums, startDate: date, extraPayment };
   } catch {
     return null;
   }

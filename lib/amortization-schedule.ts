@@ -96,11 +96,19 @@ export function generateAmortizationSchedule(
 export function generateComparisonSchedules(
   mortgage: MortgageResult,
   lumpSums: LumpSum[],
-  startDate?: Date
+  startDate?: Date,
+  extraPaymentPerPeriod: number = 0
 ): { baseline: AmortizationSchedule; accelerated: AmortizationSchedule } {
   const baseline = generateAmortizationSchedule(mortgage, [], startDate);
-  const accelerated = lumpSums.length > 0
-    ? generateAmortizationSchedule(mortgage, lumpSums, startDate)
+
+  const hasAccel = lumpSums.length > 0 || extraPaymentPerPeriod > 0;
+  const acceleratedMortgage: MortgageResult =
+    extraPaymentPerPeriod > 0
+      ? { ...mortgage, paymentAmount: mortgage.paymentAmount + extraPaymentPerPeriod }
+      : mortgage;
+
+  const accelerated = hasAccel
+    ? generateAmortizationSchedule(acceleratedMortgage, lumpSums, startDate)
     : { ...baseline };
 
   const interestSaved = baseline.totalInterestPaid - accelerated.totalInterestPaid;

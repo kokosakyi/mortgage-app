@@ -23,17 +23,29 @@ const fmtDate = (d: Date) =>
 interface AmortizationTableProps {
   schedule: AmortizationSchedule;
   baselinePayoffPeriod?: number;
+  periodsPerYear: number;
   pageSize?: number;
 }
 
-export function AmortizationTable({ schedule, baselinePayoffPeriod, pageSize = 24 }: AmortizationTableProps) {
+function periodsToYearsMonths(periods: number, periodsPerYear: number) {
+  const totalMonths = Math.round((periods / periodsPerYear) * 12);
+  return { years: Math.floor(totalMonths / 12), months: totalMonths % 12 };
+}
+
+export function AmortizationTable({ schedule, baselinePayoffPeriod, periodsPerYear, pageSize = 24 }: AmortizationTableProps) {
   const [page, setPage] = useState(0);
   const { rows } = schedule;
   const totalPages = Math.ceil(rows.length / pageSize);
   const pageRows = rows.slice(page * pageSize, (page + 1) * pageSize);
 
-  const payoffYears = Math.floor(schedule.actualPayoffPeriod / 12);
-  const payoffMonths = schedule.actualPayoffPeriod % 12;
+  const { years: payoffYears, months: payoffMonths } = periodsToYearsMonths(
+    schedule.actualPayoffPeriod,
+    periodsPerYear
+  );
+  const { years: savedYears, months: savedMonths } = periodsToYearsMonths(
+    schedule.periodsSaved,
+    periodsPerYear
+  );
 
   return (
     <div className="rounded-2xl bg-card shadow-card overflow-hidden">
@@ -43,6 +55,7 @@ export function AmortizationTable({ schedule, baselinePayoffPeriod, pageSize = 2
           <p className="text-xs text-muted-foreground">Payoff in</p>
           <p className="font-semibold result-number">
             {payoffYears > 0 && `${payoffYears}y `}{payoffMonths > 0 && `${payoffMonths}m`}
+            {payoffYears === 0 && payoffMonths === 0 && "—"}
           </p>
         </div>
         {schedule.interestSaved > 0 && (
@@ -55,7 +68,8 @@ export function AmortizationTable({ schedule, baselinePayoffPeriod, pageSize = 2
           <div>
             <p className="text-xs text-muted-foreground">Time saved</p>
             <p className="font-semibold text-primary result-number">
-              {Math.floor(schedule.periodsSaved / 12)}y {schedule.periodsSaved % 12}m
+              {savedYears > 0 && `${savedYears}y `}{savedMonths > 0 && `${savedMonths}m`}
+              {savedYears === 0 && savedMonths === 0 && "—"}
             </p>
           </div>
         )}

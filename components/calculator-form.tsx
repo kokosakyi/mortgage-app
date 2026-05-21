@@ -16,6 +16,7 @@ import { AmortizationChart } from "@/components/amortization-chart";
 import { AmortizationTable } from "@/components/amortization-table";
 import { PaydownPlanner } from "@/components/paydown-planner";
 import { BottomNav, type CalcTab } from "@/components/bottom-nav";
+import { ExtraPaymentControl } from "@/components/extra-payment-control";
 
 const DEFAULT_INPUTS: MortgageInput = {
   homePrice: 500000,
@@ -36,12 +37,13 @@ function firstOfNextMonth(): Date {
 
 export function CalculatorForm() {
   const router = useRouter();
-  const [{ inputs: _i, lumpSums: _ls, startDate: _sd }] = useState(() => {
+  const [{ inputs: _i, lumpSums: _ls, startDate: _sd, extraPayment: _ep }] = useState(() => {
     const draft = loadDraft();
     return {
       inputs: draft?.inputs ?? DEFAULT_INPUTS,
       lumpSums: draft?.lumpSums ?? [],
       startDate: draft?.startDate ?? firstOfNextMonth(),
+      extraPayment: draft?.extraPayment ?? 0,
     };
   });
 
@@ -50,6 +52,7 @@ export function CalculatorForm() {
   const [lumpSums, setLumpSums] = useState<LumpSum[]>(_ls);
   const [isSaving, setIsSaving] = useState(false);
   const [startDate, setStartDate] = useState<Date>(_sd);
+  const [extraPayment, setExtraPayment] = useState<number>(_ep);
   const [tab, setTab] = useState<CalcTab>("calculator");
 
   useEffect(() => {
@@ -61,13 +64,13 @@ export function CalculatorForm() {
   }, [inputs]);
 
   useEffect(() => {
-    saveDraft(inputs, lumpSums, startDate);
-  }, [inputs, lumpSums, startDate]);
+    saveDraft(inputs, lumpSums, startDate, extraPayment);
+  }, [inputs, lumpSums, startDate, extraPayment]);
 
   const scheduleData = useMemo(() => {
     if (!result) return null;
-    return generateComparisonSchedules(result, lumpSums, startDate);
-  }, [result, lumpSums, startDate]);
+    return generateComparisonSchedules(result, lumpSums, startDate, extraPayment);
+  }, [result, lumpSums, startDate, extraPayment]);
 
   function handleInputChange(updates: Partial<MortgageInput>) {
     setInputs((prev) => ({ ...prev, ...updates }));
@@ -141,6 +144,11 @@ export function CalculatorForm() {
         <TabsContent value="schedule" className="mt-0 space-y-6">
           {result && scheduleData ? (
             <>
+              <ExtraPaymentControl
+                mortgage={result}
+                extraPayment={extraPayment}
+                onChange={setExtraPayment}
+              />
               <LumpSumManager
                 mortgage={result}
                 lumpSums={lumpSums}
@@ -148,12 +156,13 @@ export function CalculatorForm() {
               />
               <AmortizationChart
                 baseline={scheduleData.baseline}
-                accelerated={lumpSums.length > 0 ? scheduleData.accelerated : null}
+                accelerated={lumpSums.length > 0 || extraPayment > 0 ? scheduleData.accelerated : null}
                 frequency={result.paymentFrequency}
               />
               <AmortizationTable
                 schedule={scheduleData.accelerated}
                 baselinePayoffPeriod={scheduleData.baseline.actualPayoffPeriod}
+                periodsPerYear={result.periodsPerYear}
               />
             </>
           ) : (
